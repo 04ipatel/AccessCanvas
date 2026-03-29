@@ -39,11 +39,10 @@ server.tool(
   'List upcoming assignments due within N days. If courseId is omitted, returns assignments across all courses.',
   {
     courseId: z.string().optional().describe('Canvas course ID. Omit to get all courses.'),
-    daysAhead: z.number().optional().describe('Number of days to look ahead. Default: 14.'),
   },
-  async ({ courseId, daysAhead }) => {
+  async ({ courseId }) => {
     const allCourses = courseId ? undefined : await getCourses(client);
-    const assignments = await getUpcomingAssignments(client, { courseId, daysAhead }, allCourses);
+    const assignments = await getUpcomingAssignments(client, { courseId }, allCourses);
     return { content: [{ type: 'text', text: JSON.stringify(assignments, null, 2) }] };
   }
 );

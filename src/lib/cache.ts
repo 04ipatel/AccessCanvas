@@ -1,6 +1,6 @@
 import Database from 'better-sqlite3';
 import { mkdirSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
 import { homedir } from 'os';
 import type { ModuleSummary } from '../types.js';
 
@@ -33,7 +33,7 @@ export function openCache(dbPath?: string): Cache {
   const resolvedPath = dbPath ?? join(homedir(), '.accesscanvas', 'cache.db');
 
   if (resolvedPath !== ':memory:') {
-    mkdirSync(join(homedir(), '.accesscanvas'), { recursive: true });
+    mkdirSync(dirname(resolvedPath), { recursive: true });
   }
 
   const db = new Database(resolvedPath);

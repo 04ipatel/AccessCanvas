@@ -13,7 +13,7 @@ export interface AssignmentSummary {
 
 export async function getUpcomingAssignments(
   client: CanvasClient,
-  options: { courseId?: string; daysAhead?: number },
+  options: { courseId?: string },
   allCourses?: CourseInfo[]
 ): Promise<AssignmentSummary[]> {
   const courseIds = options.courseId
