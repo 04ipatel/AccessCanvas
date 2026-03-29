@@ -1,0 +1,6 @@
+{
+  "accesscanvas": {
+    "command": "node",
+    "args": ["/Users/ishanpatel/Projects/AccessCanvas/dist/index.js"]
+  }
+}
