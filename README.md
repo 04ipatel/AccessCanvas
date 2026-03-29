@@ -21,7 +21,7 @@ npm install
 mkdir -p ~/.accesscanvas
 ```
 
-Then create `~/.accesscanvas/config.json` with your Canvas API token:
+Then create `~/.accesscanvas/config.json`:
 
 ```json
 {
@@ -55,24 +55,32 @@ Restart Claude Desktop.
 
 ## Tools
 
+### Live (always fetches fresh data)
+
 | Tool | Description |
 |------|-------------|
 | `get_courses` | List all active enrolled courses |
-| `get_upcoming_assignments` | Assignments due soon (optionally filter by course) |
-| `get_grades` | Current grades for all courses or a specific course |
+| `get_upcoming_assignments` | Assignments due soon, optionally filtered by course |
+| `get_grades` | Current course-level grades for all courses or one course |
+| `get_assignment_grades` | Individual assignment scores for a course — use this to break down a grade or identify missing/late work |
 | `get_announcements` | Recent announcements for a course |
-| `get_assignment_details` | Full assignment details including embedded files |
-| `get_course_modules` | Course module structure — cached after first fetch |
-| `get_module_item` | Content of a specific module page or file — cached |
-| `download_files` | Download Canvas files to `~/Academics/` |
+| `get_assignment_details` | Full assignment details including description and embedded files |
+| `download_files` | Download Canvas files to `~/Academics/{CourseName}/{Context}/` |
+
+### Cached (fetched once, stored locally)
+
+| Tool | Parameters | Description |
+|------|------------|-------------|
+| `get_course_modules` | `courseId`, `forceRefresh?` | Full module structure for a course. Cached after first fetch. |
+| `get_module_item` | `courseId`, `moduleItemId`, `forceRefresh?` | Content of a module page or file. Cached after first fetch. |
+
+Every tool response includes a `_fetchedAt` timestamp. Cached responses also include `_fromCache: true` and a reminder to use `forceRefresh: true` if the data may be stale.
 
 ## Caching
 
-Module structure and page content are cached in SQLite at `~/.accesscanvas/cache.db` to avoid redundant API calls. Every tool response includes a `_fetchedAt` timestamp. Cache-backed responses also include `_fromCache: true` and a hint.
+Module structure and page content are stored in SQLite at `~/.accesscanvas/cache.db`. All other tools always hit the Canvas API directly.
 
-To force a fresh fetch: ask Claude to "refresh" the modules or pass `forceRefresh: true`.
-
-Inspect the cache directly:
+Inspect the cache:
 
 ```bash
 sqlite3 ~/.accesscanvas/cache.db "SELECT course_id, fetched_at FROM module_structure;"
@@ -92,7 +100,7 @@ Example: `~/Academics/RiskManagement/Assignment2/CaseStudy.pdf`
 ## Development
 
 ```bash
-npm test          # run tests
+npm test            # run tests
 npm run test:watch  # watch mode
-npm run build     # compile TypeScript
+npm run build       # compile TypeScript
 ```
