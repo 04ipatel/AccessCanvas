@@ -39,6 +39,45 @@ describe('getModuleItem', () => {
     expect(mockCache.setPage).toHaveBeenCalled();
   });
 
+  it('returns helpful message for Assignment type items', async () => {
+    const mockClient = { get: vi.fn() };
+    const mockCache = {
+      getPage: vi.fn().mockReturnValue(null),
+      setPage: vi.fn(),
+      getModuleStructure: vi.fn().mockReturnValue({
+        data: [{
+          id: '1', name: 'Week 1', items: [
+            { id: '999', title: 'Assignment 2', type: 'Assignment', assignmentId: '54079881', locked: false }
+          ]
+        }],
+        fetchedAt: '2026-03-01T00:00:00Z',
+      }),
+    };
+
+    const { getModuleItem } = await import('../../src/tools/getModuleItem.js');
+    const result = await getModuleItem(mockClient as any, mockCache as any, '7779656', '999');
+
+    expect(result.title).toBe('Assignment 2');
+    expect(result.plainText).toContain('get_assignment_details');
+    expect(result.plainText).toContain('54079881');
+    expect(mockClient.get).not.toHaveBeenCalled();
+  });
+
+  it('returns helpful message when module structure not cached', async () => {
+    const mockClient = { get: vi.fn() };
+    const mockCache = {
+      getPage: vi.fn().mockReturnValue(null),
+      setPage: vi.fn(),
+      getModuleStructure: vi.fn().mockReturnValue(null),
+    };
+
+    const { getModuleItem } = await import('../../src/tools/getModuleItem.js');
+    const result = await getModuleItem(mockClient as any, mockCache as any, '7779656', '999');
+
+    expect(result.plainText).toContain('get_course_modules');
+    expect(mockClient.get).not.toHaveBeenCalled();
+  });
+
   it('returns cached page without API call', async () => {
     const mockClient = { get: vi.fn() };
     const mockCache = {
