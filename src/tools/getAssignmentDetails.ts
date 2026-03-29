@@ -29,7 +29,7 @@ export async function getAssignmentDetails(
     id: String(a.id),
     courseId,
     title: a.name,
-    dueAt: a.due_at,
+    dueAt: a.due_at ? a.due_at.slice(0, 10) : null,
     pointsPossible: a.points_possible,
     submissionType: a.submission_types[0] ?? 'none',
     description: parsed.plainText,

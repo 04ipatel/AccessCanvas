@@ -10,7 +10,7 @@ export async function getUpcomingAssignments(client, options, allCourses) {
                 id: String(a.id),
                 courseId: String(a.course_id ?? courseId),
                 title: a.name,
-                dueAt: a.due_at,
+                dueAt: a.due_at ? a.due_at.slice(0, 10) : null,
                 submissionType: a.submission_types[0] ?? 'none',
                 pointsPossible: a.points_possible,
             });
