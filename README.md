@@ -52,9 +52,9 @@ MCP server that connects Claude to Babson College's Canvas LMS.
 | `get_assignment_details` | Assignment details + files |
 | `get_course_modules` | Course module structure |
 | `get_module_item` | Page or file content |
-| `download_files` | Download files to ~/Canvas/ |
+| `download_files` | Download files to ~/Academics/ |
 
 ## File Storage
 
-Downloaded files land at `~/Canvas/{CourseName}/{Context}/`.
+Downloaded files land at `~/Academics/{CourseName}/{Context}/`.
 Cache stored at `~/.accesscanvas/cache.db`.

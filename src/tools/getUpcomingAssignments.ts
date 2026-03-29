@@ -2,6 +2,10 @@ import type { CanvasClient } from '../lib/canvasClient.js';
 import type { CanvasAssignment } from '../types.js';
 import type { CourseInfo } from './getCourses.js';
 
+function localDateFromISO(isoString: string): string {
+  return new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(isoString));
+}
+
 export interface AssignmentSummary {
   id: string;
   courseId: string;
@@ -33,7 +37,7 @@ export async function getUpcomingAssignments(
         id: String(a.id),
         courseId: String(a.course_id ?? courseId),
         title: a.name,
-        dueAt: a.due_at ? a.due_at.slice(0, 10) : null,
+        dueAt: a.due_at ? localDateFromISO(a.due_at) : null,
         submissionType: a.submission_types[0] ?? 'none',
         pointsPossible: a.points_possible,
       });
