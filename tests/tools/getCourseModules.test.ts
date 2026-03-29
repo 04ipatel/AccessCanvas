@@ -33,7 +33,7 @@ describe('getCourseModules', () => {
     };
 
     const { getCourseModules } = await import('../../src/tools/getCourseModules.js');
-    const result = await getCourseModules(mockClient as any, mockCache as any, '7779656');
+    const { modules: result } = await getCourseModules(mockClient as any, mockCache as any, '7779656');
 
     expect(result).toHaveLength(1);
     expect(result[0].name).toBe('Syllabus & Schedule');
@@ -47,12 +47,12 @@ describe('getCourseModules', () => {
     const cached = [{ id: '1', name: 'Cached Module', items: [] }];
     const mockClient = { getPaginated: vi.fn() };
     const mockCache = {
-      getModuleStructure: vi.fn().mockReturnValue(cached),
+      getModuleStructure: vi.fn().mockReturnValue({ data: cached, fetchedAt: '2026-03-01T00:00:00Z' }),
       setModuleStructure: vi.fn(),
     };
 
     const { getCourseModules } = await import('../../src/tools/getCourseModules.js');
-    const result = await getCourseModules(mockClient as any, mockCache as any, '7779656');
+    const { modules: result } = await getCourseModules(mockClient as any, mockCache as any, '7779656');
 
     expect(result).toEqual(cached);
     expect(mockClient.getPaginated).not.toHaveBeenCalled();
@@ -75,7 +75,7 @@ describe('getCourseModules', () => {
     const mockCache = { getModuleStructure: vi.fn().mockReturnValue(null), setModuleStructure: vi.fn() };
 
     const { getCourseModules } = await import('../../src/tools/getCourseModules.js');
-    const result = await getCourseModules(mockClient as any, mockCache as any, '7779656', true);
+    const { modules: result } = await getCourseModules(mockClient as any, mockCache as any, '7779656', true);
 
     expect(result[0].items[0].password).toBe('Strat2026');
     expect(result[0].items[0].externalUrl).toBe('https://babson-my.sharepoint.com/...');

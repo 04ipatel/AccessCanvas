@@ -13,7 +13,9 @@ describe('Cache', () => {
     const data = [{ id: '1', name: 'Syllabus', items: [] }];
     cache.setModuleStructure('course-123', data);
     const result = cache.getModuleStructure('course-123');
-    expect(result).toEqual(data);
+    expect(result).not.toBeNull();
+    expect(result!.data).toEqual(data);
+    expect(result!.fetchedAt).toBeTruthy();
   });
 
   it('returns null for uncached module structure', () => {
@@ -46,6 +48,6 @@ describe('Cache', () => {
     cache.setModuleStructure('course-123', [{ id: '1', name: 'Old', items: [] }]);
     cache.setModuleStructure('course-123', [{ id: '2', name: 'New', items: [] }]);
     const result = cache.getModuleStructure('course-123');
-    expect(result![0].name).toBe('New');
+    expect(result!.data[0].name).toBe('New');
   });
 });

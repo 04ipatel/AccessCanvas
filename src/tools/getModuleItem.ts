@@ -9,6 +9,8 @@ export interface ModuleItemContent {
   plainText: string;
   files: ParsedContent['files'];
   externalLinks: ParsedContent['externalLinks'];
+  fromCache: boolean;
+  fetchedAt: string;
 }
 
 export async function getModuleItem(
@@ -28,18 +30,20 @@ export async function getModuleItem(
         plainText: parsed.plainText,
         files: parsed.files,
         externalLinks: parsed.externalLinks,
+        fromCache: true,
+        fetchedAt: cached.fetchedAt,
       };
     }
   }
 
   // Look up item type from cached module structure
-  const modules = cache.getModuleStructure(courseId);
+  const modulesResult = cache.getModuleStructure(courseId);
   let itemType: string | undefined;
   let pageUrl: string | undefined;
   let fileId: string | undefined;
 
-  if (modules) {
-    for (const mod of modules) {
+  if (modulesResult) {
+    for (const mod of modulesResult.data) {
       const found = mod.items.find((i) => i.id === moduleItemId);
       if (found) {
         itemType = found.type;
@@ -76,5 +80,7 @@ export async function getModuleItem(
     plainText: parsed.plainText,
     files: parsed.files,
     externalLinks: parsed.externalLinks,
+    fromCache: false,
+    fetchedAt: new Date().toISOString(),
   };
 }

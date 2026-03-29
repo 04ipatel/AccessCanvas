@@ -15,6 +15,16 @@ import { getCourseModules } from './tools/getCourseModules.js';
 import { getModuleItem } from './tools/getModuleItem.js';
 import { downloadFiles } from './tools/downloadFiles.js';
 
+function withMeta(data: unknown, opts: { fromCache?: boolean; fetchedAt?: string } = {}) {
+  const fetchedAt = opts.fetchedAt ?? new Date().toISOString();
+  const meta: Record<string, unknown> = { _fetchedAt: fetchedAt };
+  if (opts.fromCache) {
+    meta._fromCache = true;
+    meta._hint = 'Served from cache — pass forceRefresh: true to fetch latest from Canvas.';
+  }
+  return { data, ...meta };
+}
+
 const config = loadConfig();
 const client = new CanvasClient(config);
 const cache = openCache();
@@ -30,7 +40,7 @@ server.tool(
   {},
   async () => {
     const courses = await getCourses(client);
-    return { content: [{ type: 'text', text: JSON.stringify(courses, null, 2) }] };
+    return { content: [{ type: 'text', text: JSON.stringify(withMeta(courses), null, 2) }] };
   }
 );
 
@@ -43,7 +53,7 @@ server.tool(
   async ({ courseId }) => {
     const allCourses = courseId ? undefined : await getCourses(client);
     const assignments = await getUpcomingAssignments(client, { courseId }, allCourses);
-    return { content: [{ type: 'text', text: JSON.stringify(assignments, null, 2) }] };
+    return { content: [{ type: 'text', text: JSON.stringify(withMeta(assignments), null, 2) }] };
   }
 );
 
@@ -55,7 +65,7 @@ server.tool(
   },
   async ({ courseId }) => {
     const grades = await getGrades(client, courseId);
-    return { content: [{ type: 'text', text: JSON.stringify(grades, null, 2) }] };
+    return { content: [{ type: 'text', text: JSON.stringify(withMeta(grades), null, 2) }] };
   }
 );
 
@@ -68,7 +78,7 @@ server.tool(
   },
   async ({ courseId, limit }) => {
     const announcements = await getAnnouncements(client, courseId, limit);
-    return { content: [{ type: 'text', text: JSON.stringify(announcements, null, 2) }] };
+    return { content: [{ type: 'text', text: JSON.stringify(withMeta(announcements), null, 2) }] };
   }
 );
 
@@ -81,7 +91,7 @@ server.tool(
   },
   async ({ courseId, assignmentId }) => {
     const details = await getAssignmentDetails(client, courseId, assignmentId);
-    return { content: [{ type: 'text', text: JSON.stringify(details, null, 2) }] };
+    return { content: [{ type: 'text', text: JSON.stringify(withMeta(details), null, 2) }] };
   }
 );
 
@@ -93,8 +103,8 @@ server.tool(
     forceRefresh: z.boolean().optional().describe('Re-fetch from Canvas even if cached. Default: false.'),
   },
   async ({ courseId, forceRefresh }) => {
-    const modules = await getCourseModules(client, cache, courseId, forceRefresh);
-    return { content: [{ type: 'text', text: JSON.stringify(modules, null, 2) }] };
+    const { modules, fromCache, fetchedAt } = await getCourseModules(client, cache, courseId, forceRefresh);
+    return { content: [{ type: 'text', text: JSON.stringify(withMeta(modules, { fromCache, fetchedAt }), null, 2) }] };
   }
 );
 
@@ -107,8 +117,8 @@ server.tool(
     forceRefresh: z.boolean().optional().describe('Re-fetch even if cached. Default: false.'),
   },
   async ({ courseId, moduleItemId, forceRefresh }) => {
-    const content = await getModuleItem(client, cache, courseId, moduleItemId, forceRefresh);
-    return { content: [{ type: 'text', text: JSON.stringify(content, null, 2) }] };
+    const { fromCache, fetchedAt, ...content } = await getModuleItem(client, cache, courseId, moduleItemId, forceRefresh);
+    return { content: [{ type: 'text', text: JSON.stringify(withMeta(content, { fromCache, fetchedAt }), null, 2) }] };
   }
 );
 
@@ -125,7 +135,7 @@ server.tool(
   },
   async ({ files }) => {
     const results = await downloadFiles(client, cache, files);
-    return { content: [{ type: 'text', text: JSON.stringify(results, null, 2) }] };
+    return { content: [{ type: 'text', text: JSON.stringify(withMeta(results), null, 2) }] };
   }
 );
 

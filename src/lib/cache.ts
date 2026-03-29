@@ -21,7 +21,7 @@ export interface CachedDownload {
 }
 
 export interface Cache {
-  getModuleStructure(courseId: string): ModuleSummary[] | null;
+  getModuleStructure(courseId: string): { data: ModuleSummary[]; fetchedAt: string } | null;
   setModuleStructure(courseId: string, data: ModuleSummary[]): void;
   getPage(itemId: string): CachedPage | null;
   setPage(itemId: string, courseId: string, title: string, content: string): void;
@@ -63,11 +63,11 @@ export function openCache(dbPath?: string): Cache {
   `);
 
   return {
-    getModuleStructure(courseId: string): ModuleSummary[] | null {
+    getModuleStructure(courseId: string): { data: ModuleSummary[]; fetchedAt: string } | null {
       const row = db
-        .prepare('SELECT data FROM module_structure WHERE course_id = ?')
-        .get(courseId) as { data: string } | undefined;
-      return row ? JSON.parse(row.data) : null;
+        .prepare('SELECT data, fetched_at FROM module_structure WHERE course_id = ?')
+        .get(courseId) as { data: string; fetched_at: string } | undefined;
+      return row ? { data: JSON.parse(row.data), fetchedAt: row.fetched_at } : null;
     },
 
     setModuleStructure(courseId: string, data: ModuleSummary[]): void {

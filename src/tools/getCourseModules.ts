@@ -3,15 +3,21 @@ import type { Cache } from '../lib/cache.js';
 import { extractPasswordFromTitle } from '../lib/htmlParser.js';
 import type { CanvasModule, CanvasModuleItem, ModuleSummary, ModuleItemSummary } from '../types.js';
 
+export interface CourseModulesResult {
+  modules: ModuleSummary[];
+  fromCache: boolean;
+  fetchedAt: string;
+}
+
 export async function getCourseModules(
   client: CanvasClient,
   cache: Cache,
   courseId: string,
   forceRefresh: boolean = false
-): Promise<ModuleSummary[]> {
+): Promise<CourseModulesResult> {
   if (!forceRefresh) {
     const cached = cache.getModuleStructure(courseId);
-    if (cached) return cached;
+    if (cached) return { modules: cached.data, fromCache: true, fetchedAt: cached.fetchedAt };
   }
 
   const modules = await client.getPaginated<CanvasModule>(
@@ -32,8 +38,9 @@ export async function getCourseModules(
     result.push({ id: String(mod.id), name: mod.name, items: mappedItems });
   }
 
+  const fetchedAt = new Date().toISOString();
   cache.setModuleStructure(courseId, result);
-  return result;
+  return { modules: result, fromCache: false, fetchedAt };
 }
 
 function mapModuleItem(item: CanvasModuleItem): ModuleItemSummary {

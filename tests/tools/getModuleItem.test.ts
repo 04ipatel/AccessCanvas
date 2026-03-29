@@ -17,13 +17,16 @@ describe('getModuleItem', () => {
     const mockCache = {
       getPage: vi.fn().mockReturnValue(null),
       setPage: vi.fn(),
-      getModuleStructure: vi.fn().mockReturnValue([
-        {
-          id: '1', name: 'Introduction', items: [
-            { id: '888', title: 'Session 1 Notes', type: 'Page', pageUrl: 'session-1-notes', locked: false }
-          ]
-        }
-      ]),
+      getModuleStructure: vi.fn().mockReturnValue({
+        data: [
+          {
+            id: '1', name: 'Introduction', items: [
+              { id: '888', title: 'Session 1 Notes', type: 'Page', pageUrl: 'session-1-notes', locked: false }
+            ]
+          }
+        ],
+        fetchedAt: '2026-03-01T00:00:00Z',
+      }),
     };
 
     const { getModuleItem } = await import('../../src/tools/getModuleItem.js');
