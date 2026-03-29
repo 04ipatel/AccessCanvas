@@ -28,7 +28,7 @@ describe('getUpcomingAssignments', () => {
     expect(result[0].id).toBe('54079881');
     expect(result[0].title).toBe('Assignment 2: Data Management in R');
     expect(result[0].courseId).toBe('7779627');
-    expect(result[0].dueAt).toBe('2026-04-04T23:59:59-04:00');
+    expect(result[0].dueAt).toBe('2026-04-04');
     expect(result[0].submissionType).toBe('online_upload');
     expect(result[0].pointsPossible).toBe(100);
   });

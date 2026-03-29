@@ -29,7 +29,7 @@ describe('getAssignmentDetails', () => {
 
     expect(result.id).toBe('54079881');
     expect(result.title).toBe('Group Assignment 2');
-    expect(result.dueAt).toBe('2026-03-25T07:59:59-04:00');
+    expect(result.dueAt).toBe('2026-03-25');
     expect(result.files).toHaveLength(2);
     expect(result.files[0].name).toBe('Assignment 2.pdf');
     expect(result.files[0].fileId).toBe('344828267');

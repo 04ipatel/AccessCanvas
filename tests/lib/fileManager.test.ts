@@ -19,10 +19,10 @@ describe('sanitizeName', () => {
 });
 
 describe('getLocalPath', () => {
-  it('builds correct path under ~/Canvas', async () => {
+  it('builds correct path under ~/Academics', async () => {
     const { getLocalPath } = await import('../../src/lib/fileManager.js');
     const path = getLocalPath('Risk Management', 'Assignment 2', 'Assignment 2.pdf');
-    expect(path).toContain('Canvas');
+    expect(path).toContain('Academics');
     expect(path).toContain('RiskManagement');
     expect(path).toContain('Assignment2');
     expect(path).toContain('Assignment2.pdf');
