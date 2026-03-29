@@ -1,10 +1,7 @@
 import type { CanvasClient } from '../lib/canvasClient.js';
 import type { CanvasAssignment } from '../types.js';
 import type { CourseInfo } from './getCourses.js';
-
-function localDateFromISO(isoString: string): string {
-  return new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(isoString));
-}
+import { localDateFromISO } from '../lib/dateUtils.js';
 
 export interface AssignmentSummary {
   id: string;

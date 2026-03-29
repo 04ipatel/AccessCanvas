@@ -4,7 +4,7 @@ import { homedir } from 'os';
 import type { CanvasClient } from './canvasClient.js';
 import type { CanvasFile } from '../types.js';
 
-const CANVAS_ROOT = '/Users/ishanpatel/Academics';
+const CANVAS_ROOT = join(homedir(), 'Academics');
 
 export function sanitizeName(name: string): string {
   return name.replace(/\s+/g, '').replace(/[^a-zA-Z0-9._\-]/g, '');

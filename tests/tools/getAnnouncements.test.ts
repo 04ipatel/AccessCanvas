@@ -31,7 +31,7 @@ describe('getAnnouncements', () => {
     await getAnnouncements(mockClient as any, '7779627', 3);
     expect(mockClient.getPaginated).toHaveBeenCalledWith(
       '/api/v1/courses/7779627/discussion_topics',
-      expect.objectContaining({ only_announcements: 'true', per_page: '3' })
+      expect.objectContaining({ only_announcements: 'true' })
     );
   });
 });

@@ -16,7 +16,7 @@ export async function getAnnouncements(
 ): Promise<AnnouncementSummary[]> {
   const topics = await client.getPaginated<CanvasDiscussionTopic>(
     `/api/v1/courses/${courseId}/discussion_topics`,
-    { only_announcements: 'true', per_page: String(limit), order_by: 'posted_at' }
+    { only_announcements: 'true', order_by: 'posted_at' }
   );
 
   return topics.slice(0, limit).map((t) => ({
