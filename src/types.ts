@@ -12,6 +12,15 @@ export interface CanvasCourse {
   }>;
 }
 
+export interface CanvasSubmission {
+  score: number | null;
+  grade: string | null;
+  submitted_at: string | null;
+  missing: boolean;
+  late: boolean;
+  workflow_state: string;
+}
+
 export interface CanvasAssignment {
   id: number;
   name: string;
@@ -22,6 +31,7 @@ export interface CanvasAssignment {
   points_possible: number;
   submission_types: string[];
   course_id: number;
+  submission?: CanvasSubmission;
 }
 
 export interface CanvasModule {

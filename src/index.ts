@@ -13,6 +13,7 @@ import { getAnnouncements } from './tools/getAnnouncements.js';
 import { getAssignmentDetails } from './tools/getAssignmentDetails.js';
 import { getCourseModules } from './tools/getCourseModules.js';
 import { getModuleItem } from './tools/getModuleItem.js';
+import { getAssignmentGrades } from './tools/getAssignmentGrades.js';
 import { downloadFiles } from './tools/downloadFiles.js';
 
 function withMeta(data: unknown, opts: { fromCache?: boolean; fetchedAt?: string } = {}) {
@@ -92,6 +93,18 @@ server.tool(
   async ({ courseId, assignmentId }) => {
     const details = await getAssignmentDetails(client, courseId, assignmentId);
     return { content: [{ type: 'text', text: JSON.stringify(withMeta(details), null, 2) }] };
+  }
+);
+
+server.tool(
+  'get_assignment_grades',
+  'Get individual assignment scores for a course. Shows score, grade, points possible, and flags for missing/late work. Use this to break down a course grade.',
+  {
+    courseId: z.string().describe('Canvas course ID'),
+  },
+  async ({ courseId }) => {
+    const grades = await getAssignmentGrades(client, courseId);
+    return { content: [{ type: 'text', text: JSON.stringify(withMeta(grades), null, 2) }] };
   }
 );
 
