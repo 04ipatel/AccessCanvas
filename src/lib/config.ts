@@ -8,7 +8,7 @@ const DEFAULT_CONFIG_PATH = join(homedir(), '.accesscanvas', 'config.json');
 export function loadConfig(configPath: string = DEFAULT_CONFIG_PATH): Config {
   if (!existsSync(configPath)) {
     throw new Error(
-      `Config file not found at ${configPath}. Run: npm run setup`
+      `Config file not found at ${configPath}. Run: bun run setup`
     );
   }
 

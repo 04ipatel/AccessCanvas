@@ -1,6 +1,12 @@
 // tests/tools/downloadFiles.test.ts
 import { describe, it, expect, vi } from 'vitest';
 
+vi.mock('fs', () => ({
+  mkdirSync: vi.fn(),
+  writeFileSync: vi.fn(),
+  existsSync: vi.fn().mockReturnValue(false),
+}));
+
 describe('downloadFiles', () => {
   it('downloads files and returns local paths under the given downloadDir', async () => {
     const mockClient = {
@@ -15,12 +21,6 @@ describe('downloadFiles', () => {
       getFileBuffer: vi.fn().mockResolvedValue(Buffer.from('fake pdf content')),
     };
     const mockCache = { recordDownloadedFile: vi.fn() };
-
-    vi.mock('fs', () => ({
-      mkdirSync: vi.fn(),
-      writeFileSync: vi.fn(),
-      existsSync: vi.fn().mockReturnValue(false),
-    }));
 
     const { downloadFiles } = await import('../../src/tools/downloadFiles.js');
     const result = await downloadFiles(

@@ -20,7 +20,7 @@ bun run test -- tests/tools/downloadFiles.test.ts
 
 An MCP (Model Context Protocol) server that connects Claude to Babson College's Canvas LMS. It gives Claude read-only access to courses, assignments, grades, announcements, and files via 9 registered tools.
 
-Config lives at `~/.accesscanvas/config.json` (requires `token`, `baseUrl`, `downloadDir`, `timezone`). Run `npm run setup` to configure. SQLite cache at `~/.accesscanvas/cache.db`. Downloaded files land in the configured `downloadDir` (default: `~/Academics/`).
+Config lives at `~/.accesscanvas/config.json` (requires `token`, `baseUrl`, `downloadDir`, `timezone`). Run `bun run setup` to configure. SQLite cache at `~/.accesscanvas/cache.db`. Downloaded files land in the configured `downloadDir` (default: `~/Academics/`).
 
 ## Architecture
 
