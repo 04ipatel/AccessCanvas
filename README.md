@@ -15,13 +15,13 @@ MCP server that connects Claude to Babson College's Canvas LMS. Gives Claude rea
 ### 1. Install dependencies
 
 ```bash
-bun install
+npm install
 ```
 
 ### 2. Run the setup wizard
 
 ```bash
-bun run setup
+npm run setup
 ```
 
 The wizard will ask for your Canvas URL, API token (with live validation), timezone (auto-detected, confirm or override), and download folder. It offers to auto-configure Claude Desktop. No manual file editing needed.
@@ -29,7 +29,7 @@ The wizard will ask for your Canvas URL, API token (with live validation), timez
 ### 3. Build
 
 ```bash
-bun run build
+npm run build
 ```
 
 ### 4. Restart Claude Desktop
@@ -72,10 +72,10 @@ sqlite3 ~/.accesscanvas/cache.db "SELECT id, title, fetched_at FROM cached_pages
 
 ## File Storage
 
-Downloaded files are organized at:
+Downloaded files are organized under the directory you chose during setup (default: `~/Academics`):
 
 ```
-~/Academics/{CourseName}/{Context}/{filename}
+{downloadDir}/{CourseName}/{Context}/{filename}
 ```
 
 Example: `~/Academics/RiskManagement/Assignment2/CaseStudy.pdf`
