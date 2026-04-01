@@ -15,22 +15,13 @@ MCP server that connects Claude to Babson College's Canvas LMS. Gives Claude rea
 npm install
 ```
 
-### 2. Create config file
+### 2. Run the setup wizard
 
 ```bash
-mkdir -p ~/.accesscanvas
+npm run setup
 ```
 
-Then create `~/.accesscanvas/config.json`:
-
-```json
-{
-  "token": "YOUR_CANVAS_API_TOKEN",
-  "baseUrl": "https://babson.instructure.com"
-}
-```
-
-Get your token: Canvas → Account → Settings → Approved Integrations → New Access Token
+The wizard will ask for your Canvas URL, API token (with live validation), timezone (auto-detected, confirm or override), and download folder. It offers to auto-configure Claude Desktop. No manual file editing needed.
 
 ### 3. Build
 
@@ -38,20 +29,9 @@ Get your token: Canvas → Account → Settings → Approved Integrations → Ne
 npm run build
 ```
 
-### 4. Connect to Claude Desktop
+### 4. Restart Claude Desktop
 
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json` under `"mcpServers"`:
-
-```json
-{
-  "accesscanvas": {
-    "command": "node",
-    "args": ["/Users/ishanpatel/Projects/AccessCanvas/dist/index.js"]
-  }
-}
-```
-
-Restart Claude Desktop.
+AccessCanvas will appear in Claude's tool list.
 
 ## Tools
 
