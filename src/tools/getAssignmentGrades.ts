@@ -1,6 +1,6 @@
 import type { CanvasClient } from '../lib/canvasClient.js';
 import type { CanvasAssignment } from '../types.js';
-import { localDateFromISO } from '../lib/dateUtils.js';
+import { formatDateTime } from '../lib/dateUtils.js';
 
 export interface AssignmentGrade {
   id: string;
@@ -17,7 +17,8 @@ export interface AssignmentGrade {
 
 export async function getAssignmentGrades(
   client: CanvasClient,
-  courseId: string
+  courseId: string,
+  timezone: string
 ): Promise<AssignmentGrade[]> {
   const assignments = await client.getPaginated<CanvasAssignment>(
     `/api/v1/courses/${courseId}/assignments`,
@@ -28,11 +29,11 @@ export async function getAssignmentGrades(
     id: String(a.id),
     courseId,
     title: a.name,
-    dueAt: a.due_at ? localDateFromISO(a.due_at) : null,
+    dueAt: formatDateTime(a.due_at, timezone),
     pointsPossible: a.points_possible,
     score: a.submission?.score ?? null,
     grade: a.submission?.grade ?? null,
-    submittedAt: a.submission?.submitted_at ?? null,
+    submittedAt: formatDateTime(a.submission?.submitted_at ?? null, timezone),
     missing: a.submission?.missing ?? false,
     late: a.submission?.late ?? false,
   }));
