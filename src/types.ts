@@ -120,4 +120,6 @@ export interface ModuleSummary {
 export interface Config {
   token: string;
   baseUrl: string;
+  downloadDir: string;
+  timezone: string;
 }
