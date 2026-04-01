@@ -53,7 +53,7 @@ server.tool(
   },
   async ({ courseId }) => {
     const allCourses = courseId ? undefined : await getCourses(client);
-    const assignments = await getUpcomingAssignments(client, { courseId }, allCourses);
+    const assignments = await getUpcomingAssignments(client, { courseId }, allCourses, config.timezone);
     return { content: [{ type: 'text', text: JSON.stringify(withMeta(assignments), null, 2) }] };
   }
 );
@@ -91,7 +91,7 @@ server.tool(
     assignmentId: z.string().describe('Canvas assignment ID'),
   },
   async ({ courseId, assignmentId }) => {
-    const details = await getAssignmentDetails(client, courseId, assignmentId);
+    const details = await getAssignmentDetails(client, courseId, assignmentId, config.timezone);
     return { content: [{ type: 'text', text: JSON.stringify(withMeta(details), null, 2) }] };
   }
 );
@@ -103,7 +103,7 @@ server.tool(
     courseId: z.string().describe('Canvas course ID'),
   },
   async ({ courseId }) => {
-    const grades = await getAssignmentGrades(client, courseId);
+    const grades = await getAssignmentGrades(client, courseId, config.timezone);
     return { content: [{ type: 'text', text: JSON.stringify(withMeta(grades), null, 2) }] };
   }
 );
@@ -142,12 +142,13 @@ server.tool(
     files: z.array(z.object({
       fileId: z.string().describe('Canvas file ID'),
       courseId: z.string().describe('Canvas course ID'),
+      courseCode: z.string().describe('Course code, e.g. "CS101", used for folder naming'),
       courseName: z.string().describe('Human-readable course name for folder organization'),
       context: z.string().describe('Folder context, e.g. "Assignment2" or "Syllabus"'),
     })).describe('Files to download'),
   },
   async ({ files }) => {
-    const results = await downloadFiles(client, cache, files);
+    const results = await downloadFiles(client, cache, files, config.downloadDir);
     return { content: [{ type: 'text', text: JSON.stringify(withMeta(results), null, 2) }] };
   }
 );
