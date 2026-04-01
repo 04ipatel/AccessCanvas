@@ -1,3 +1,6 @@
+# By ishu
+The following is a little tool I made to help AI navigate CanvasLMS, and see what might be possible in doing so. Let me know what you think, if you have any questions, or even if you'd like to see new features developed for specific use cases. Reach out!
+
 # AccessCanvas
 
 MCP server that connects Claude to Babson College's Canvas LMS. Gives Claude read-only access to courses, assignments, grades, announcements, module content, and files.
