@@ -3,3 +3,4 @@ dist/
 *.js.map
 # ~/.accesscanvas/ lives outside the repo (token + cache db)
 .DS_Store
+.worktrees/
