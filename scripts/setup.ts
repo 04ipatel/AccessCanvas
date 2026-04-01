@@ -82,10 +82,18 @@ async function main() {
   let timezone = detectedTimezone;
   if (!timezoneConfirmed) {
     console.log('\nCommon timezones: America/New_York, America/Chicago, America/Denver, America/Los_Angeles\n');
-    timezone = await input({
-      message: 'Enter your timezone (IANA format):',
-      default: detectedTimezone,
-    });
+    while (true) {
+      timezone = await input({
+        message: 'Enter your timezone (IANA format):',
+        default: detectedTimezone,
+      });
+      try {
+        new Intl.DateTimeFormat('en-US', { timeZone: timezone });
+        break;
+      } catch {
+        console.log(`\n"${timezone}" is not a valid IANA timezone. Try again.\n`);
+      }
+    }
   }
 
   // Stage 5 — Download folder

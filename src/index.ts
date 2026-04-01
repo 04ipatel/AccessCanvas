@@ -137,7 +137,7 @@ server.tool(
 
 server.tool(
   'download_files',
-  'Download Canvas files to ~/Canvas/{CourseName}/{Context}/. Get fileIds from get_assignment_details or get_module_item.',
+  'Download Canvas files to the configured download directory. Get fileIds from get_assignment_details or get_module_item.',
   {
     files: z.array(z.object({
       fileId: z.string().describe('Canvas file ID'),
