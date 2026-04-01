@@ -5,6 +5,7 @@ import { downloadCanvasFile } from '../lib/fileManager.js';
 export interface DownloadRequest {
   fileId: string;
   courseId: string;
+  courseCode: string;
   courseName: string;
   context: string;
 }
@@ -18,7 +19,8 @@ export interface DownloadResult {
 export async function downloadFiles(
   client: CanvasClient,
   cache: Cache,
-  requests: DownloadRequest[]
+  requests: DownloadRequest[],
+  downloadDir: string
 ): Promise<DownloadResult[]> {
   const results: DownloadResult[] = [];
 
@@ -27,8 +29,10 @@ export async function downloadFiles(
       client,
       req.courseId,
       req.fileId,
+      req.courseCode,
       req.courseName,
-      req.context
+      req.context,
+      downloadDir
     );
 
     cache.recordDownloadedFile(req.fileId, req.courseId, localPath, displayName);

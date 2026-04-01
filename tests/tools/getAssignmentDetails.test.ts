@@ -25,11 +25,12 @@ describe('getAssignmentDetails', () => {
     };
 
     const { getAssignmentDetails } = await import('../../src/tools/getAssignmentDetails.js');
-    const result = await getAssignmentDetails(mockClient as any, '7779656', '54079881');
+    const result = await getAssignmentDetails(mockClient as any, '7779656', '54079881', 'America/New_York');
 
     expect(result.id).toBe('54079881');
     expect(result.title).toBe('Group Assignment 2');
-    expect(result.dueAt).toBe('2026-03-25');
+    // 2026-03-25T07:59:59-04:00 = 2026-03-25 7:59 AM EDT in America/New_York
+    expect(result.dueAt).toBe('2026-03-25 7:59 AM EDT');
     expect(result.files).toHaveLength(2);
     expect(result.files[0].name).toBe('Assignment 2.pdf');
     expect(result.files[0].fileId).toBe('344828267');
@@ -53,9 +54,10 @@ describe('getAssignmentDetails', () => {
     };
 
     const { getAssignmentDetails } = await import('../../src/tools/getAssignmentDetails.js');
-    const result = await getAssignmentDetails(mockClient as any, '7779627', '99');
+    const result = await getAssignmentDetails(mockClient as any, '7779627', '99', 'America/New_York');
 
     expect(result.files).toHaveLength(0);
     expect(result.description).toContain('Complete the quiz');
+    expect(result.dueAt).toBeNull();
   });
 });

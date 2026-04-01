@@ -44,12 +44,9 @@ const mockAssignments = [
 
 describe('getAssignmentGrades', () => {
   it('returns graded assignments with scores', async () => {
-    const mockClient = {
-      getPaginated: vi.fn().mockResolvedValue(mockAssignments),
-    };
-
+    const mockClient = { getPaginated: vi.fn().mockResolvedValue(mockAssignments) };
     const { getAssignmentGrades } = await import('../../src/tools/getAssignmentGrades.js');
-    const result = await getAssignmentGrades(mockClient as any, '7779627');
+    const result = await getAssignmentGrades(mockClient as any, '7779627', 'America/New_York');
 
     expect(result).toHaveLength(2);
     expect(result[0].id).toBe('54079881');
@@ -62,31 +59,32 @@ describe('getAssignmentGrades', () => {
   });
 
   it('returns null score for unsubmitted assignments', async () => {
-    const mockClient = {
-      getPaginated: vi.fn().mockResolvedValue(mockAssignments),
-    };
-
+    const mockClient = { getPaginated: vi.fn().mockResolvedValue(mockAssignments) };
     const { getAssignmentGrades } = await import('../../src/tools/getAssignmentGrades.js');
-    const result = await getAssignmentGrades(mockClient as any, '7779627');
+    const result = await getAssignmentGrades(mockClient as any, '7779627', 'America/New_York');
 
     expect(result[1].score).toBeNull();
     expect(result[1].missing).toBe(true);
+    expect(result[1].submittedAt).toBeNull();
   });
 
   it('calls correct Canvas endpoint with submission include', async () => {
     const mockClient = { getPaginated: vi.fn().mockResolvedValue([]) };
     const { getAssignmentGrades } = await import('../../src/tools/getAssignmentGrades.js');
-    await getAssignmentGrades(mockClient as any, '7779627');
+    await getAssignmentGrades(mockClient as any, '7779627', 'America/New_York');
     expect(mockClient.getPaginated).toHaveBeenCalledWith(
       '/api/v1/courses/7779627/assignments',
       expect.objectContaining({ 'include[]': 'submission' })
     );
   });
 
-  it('returns dueAt as local date string', async () => {
+  it('formats dueAt as date+time+timezone in specified timezone', async () => {
     const mockClient = { getPaginated: vi.fn().mockResolvedValue(mockAssignments) };
     const { getAssignmentGrades } = await import('../../src/tools/getAssignmentGrades.js');
-    const result = await getAssignmentGrades(mockClient as any, '7779627');
-    expect(result[0].dueAt).toBe('2026-03-31'); // UTC 2026-04-01T03:59Z = March 31 local (EST)
+    const result = await getAssignmentGrades(mockClient as any, '7779627', 'America/New_York');
+    // 2026-04-01T03:59:00Z in EDT (UTC-4) = 2026-03-31 11:59 PM EDT
+    expect(result[0].dueAt).toBe('2026-03-31 11:59 PM EDT');
+    // 2026-03-30T20:00:00Z in EDT (UTC-4) = 2026-03-30 4:00 PM EDT
+    expect(result[0].submittedAt).toBe('2026-03-30 4:00 PM EDT');
   });
 });

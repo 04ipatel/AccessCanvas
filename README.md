@@ -12,46 +12,26 @@ MCP server that connects Claude to Babson College's Canvas LMS. Gives Claude rea
 ### 1. Install dependencies
 
 ```bash
-npm install
+bun install
 ```
 
-### 2. Create config file
+### 2. Run the setup wizard
 
 ```bash
-mkdir -p ~/.accesscanvas
+bun run setup
 ```
 
-Then create `~/.accesscanvas/config.json`:
-
-```json
-{
-  "token": "YOUR_CANVAS_API_TOKEN",
-  "baseUrl": "https://babson.instructure.com"
-}
-```
-
-Get your token: Canvas → Account → Settings → Approved Integrations → New Access Token
+The wizard will ask for your Canvas URL, API token (with live validation), timezone (auto-detected, confirm or override), and download folder. It offers to auto-configure Claude Desktop. No manual file editing needed.
 
 ### 3. Build
 
 ```bash
-npm run build
+bun run build
 ```
 
-### 4. Connect to Claude Desktop
+### 4. Restart Claude Desktop
 
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json` under `"mcpServers"`:
-
-```json
-{
-  "accesscanvas": {
-    "command": "node",
-    "args": ["/Users/ishanpatel/Projects/AccessCanvas/dist/index.js"]
-  }
-}
-```
-
-Restart Claude Desktop.
+AccessCanvas will appear in Claude's tool list.
 
 ## Tools
 
@@ -65,7 +45,7 @@ Restart Claude Desktop.
 | `get_assignment_grades` | Individual assignment scores for a course — use this to break down a grade or identify missing/late work |
 | `get_announcements` | Recent announcements for a course |
 | `get_assignment_details` | Full assignment details including description and embedded files |
-| `download_files` | Download Canvas files to `~/Academics/{CourseName}/{Context}/` |
+| `download_files` | Download Canvas files to `{downloadDir}/{CourseName}/{Context}/` (configurable during setup) |
 
 ### Cached (fetched once, stored locally)
 
@@ -100,7 +80,7 @@ Example: `~/Academics/RiskManagement/Assignment2/CaseStudy.pdf`
 ## Development
 
 ```bash
-npm test            # run tests
-npm run test:watch  # watch mode
-npm run build       # compile TypeScript
+bun run test        # run tests
+bun run test:watch  # watch mode
+bun run build       # compile TypeScript
 ```

@@ -1,7 +1,7 @@
 import type { CanvasClient } from '../lib/canvasClient.js';
 import { parseContent } from '../lib/htmlParser.js';
 import type { CanvasAssignment, FileRef, ExternalLink } from '../types.js';
-import { localDateFromISO } from '../lib/dateUtils.js';
+import { formatDateTime } from '../lib/dateUtils.js';
 
 export interface AssignmentDetails {
   id: string;
@@ -18,7 +18,8 @@ export interface AssignmentDetails {
 export async function getAssignmentDetails(
   client: CanvasClient,
   courseId: string,
-  assignmentId: string
+  assignmentId: string,
+  timezone: string
 ): Promise<AssignmentDetails> {
   const a = await client.get<CanvasAssignment>(
     `/api/v1/courses/${courseId}/assignments/${assignmentId}`
@@ -30,7 +31,7 @@ export async function getAssignmentDetails(
     id: String(a.id),
     courseId,
     title: a.name,
-    dueAt: a.due_at ? localDateFromISO(a.due_at) : null,
+    dueAt: formatDateTime(a.due_at, timezone),
     pointsPossible: a.points_possible,
     submissionType: a.submission_types[0] ?? 'none',
     description: parsed.plainText,

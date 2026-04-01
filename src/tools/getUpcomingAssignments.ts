@@ -1,7 +1,7 @@
 import type { CanvasClient } from '../lib/canvasClient.js';
 import type { CanvasAssignment } from '../types.js';
 import type { CourseInfo } from './getCourses.js';
-import { localDateFromISO } from '../lib/dateUtils.js';
+import { formatDateTime } from '../lib/dateUtils.js';
 
 export interface AssignmentSummary {
   id: string;
@@ -15,7 +15,8 @@ export interface AssignmentSummary {
 export async function getUpcomingAssignments(
   client: CanvasClient,
   options: { courseId?: string },
-  allCourses?: CourseInfo[]
+  allCourses: CourseInfo[] | undefined,
+  timezone: string
 ): Promise<AssignmentSummary[]> {
   const courseIds = options.courseId
     ? [options.courseId]
@@ -34,7 +35,7 @@ export async function getUpcomingAssignments(
         id: String(a.id),
         courseId: String(a.course_id ?? courseId),
         title: a.name,
-        dueAt: a.due_at ? localDateFromISO(a.due_at) : null,
+        dueAt: formatDateTime(a.due_at, timezone),
         submissionType: a.submission_types[0] ?? 'none',
         pointsPossible: a.points_possible,
       });
