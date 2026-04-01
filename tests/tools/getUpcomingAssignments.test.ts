@@ -17,34 +17,28 @@ const mockAssignments = [
 
 describe('getUpcomingAssignments', () => {
   it('returns trimmed upcoming assignments for a specific course', async () => {
-    const mockClient = {
-      getPaginated: vi.fn().mockResolvedValue(mockAssignments),
-    };
-
+    const mockClient = { getPaginated: vi.fn().mockResolvedValue(mockAssignments) };
     const { getUpcomingAssignments } = await import('../../src/tools/getUpcomingAssignments.js');
-    const result = await getUpcomingAssignments(mockClient as any, { courseId: '7779627' });
+    const result = await getUpcomingAssignments(mockClient as any, { courseId: '7779627' }, undefined, 'America/New_York');
 
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('54079881');
     expect(result[0].title).toBe('Assignment 2: Data Management in R');
     expect(result[0].courseId).toBe('7779627');
-    expect(result[0].dueAt).toBe('2026-04-04');
+    // 2026-04-04T23:59:59-04:00 = 2026-04-04 11:59 PM EDT in America/New_York
+    expect(result[0].dueAt).toBe('2026-04-04 11:59 PM EDT');
     expect(result[0].submissionType).toBe('online_upload');
     expect(result[0].pointsPossible).toBe(100);
   });
 
   it('fetches across all provided courses when no courseId given', async () => {
-    const mockClient = {
-      getPaginated: vi.fn().mockResolvedValue(mockAssignments),
-    };
-
+    const mockClient = { getPaginated: vi.fn().mockResolvedValue(mockAssignments) };
     const mockCourses = [
       { id: '7779656', name: 'Risk Management', code: 'FIN4507' },
       { id: '7779627', name: 'PBA', code: 'QTM3310' },
     ];
-
     const { getUpcomingAssignments } = await import('../../src/tools/getUpcomingAssignments.js');
-    await getUpcomingAssignments(mockClient as any, {}, mockCourses);
+    await getUpcomingAssignments(mockClient as any, {}, mockCourses, 'America/New_York');
 
     expect(mockClient.getPaginated).toHaveBeenCalledTimes(2);
   });
