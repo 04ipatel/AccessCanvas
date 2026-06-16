@@ -1,10 +1,11 @@
 /**
  * Formats a Canvas ISO timestamp as 'YYYY-MM-DD H:MM AM/PM TZ'
  * in the specified IANA timezone (e.g. 'America/New_York').
- * Returns null for null inputs (assignments without due dates).
+ * Returns null for null/undefined inputs (assignments without due dates, or
+ * responses that omit the field entirely).
  */
-export function formatDateTime(isoString: string | null, timezone: string): string | null {
-  if (isoString === null) return null;
+export function formatDateTime(isoString: string | null | undefined, timezone: string): string | null {
+  if (isoString == null) return null;
 
   const d = new Date(isoString);
 

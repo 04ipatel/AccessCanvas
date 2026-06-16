@@ -12,6 +12,11 @@ describe('formatDateTime', () => {
     expect(formatDateTime(null, 'America/New_York')).toBeNull();
   });
 
+  it('returns null for undefined input (omitted field), not "Invalid Date"', async () => {
+    const { formatDateTime } = await import('../../src/lib/dateUtils.js');
+    expect(formatDateTime(undefined, 'America/New_York')).toBeNull();
+  });
+
   it('uses the specified timezone, not system timezone', async () => {
     const { formatDateTime } = await import('../../src/lib/dateUtils.js');
     // Same UTC instant in two different timezones should differ

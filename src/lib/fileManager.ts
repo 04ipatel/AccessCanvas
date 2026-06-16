@@ -4,7 +4,11 @@ import type { CanvasClient } from './canvasClient.js';
 import type { CanvasFile } from '../types.js';
 
 export function sanitizeName(name: string): string {
-  return name.replace(/\s+/g, '').replace(/[^a-zA-Z0-9._\-]/g, '');
+  // Strip spaces and unsafe chars. A name that is entirely unsafe (e.g. all-CJK
+  // with no extension) would sanitize to '' and make the write target a directory
+  // → fall back to 'file' so we always write to a real file path.
+  const cleaned = name.replace(/\s+/g, '').replace(/[^a-zA-Z0-9._\-]/g, '');
+  return cleaned || 'file';
 }
 
 export interface DownloadFileRequest {

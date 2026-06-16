@@ -51,4 +51,44 @@ describe('getModuleItem', () => {
     expect(result.plainText).toContain('not found');
     expect(client.get).not.toHaveBeenCalled();
   });
+
+  it('returns a locked message without fetching when the item is locked', async () => {
+    (getModules as any).mockResolvedValue([
+      { id: '10', name: 'Week 1', items: [{ id: '103', title: 'Gated Page', type: 'Page', pageUrl: 'gated', locked: true }] },
+    ]);
+    const client = { get: vi.fn() };
+    const result = await getModuleItem(client as any, '7', '103');
+    expect(result.plainText).toContain('locked');
+    expect(client.get).not.toHaveBeenCalled();
+  });
+
+  it('handles a Page with a null body without crashing', async () => {
+    (getModules as any).mockResolvedValue([
+      { id: '10', name: 'Week 1', items: [{ id: '104', title: 'Empty Page', type: 'Page', pageUrl: 'empty', locked: false }] },
+    ]);
+    const client = { get: vi.fn().mockResolvedValue({ title: 'Empty Page', body: null }) };
+    const result = await getModuleItem(client as any, '7', '104');
+    expect(result.title).toBe('Empty Page');
+    expect(result.plainText).toBe('');
+    expect(result.files).toEqual([]);
+  });
+
+  it('directs Assignment items even when assignmentId is missing', async () => {
+    (getModules as any).mockResolvedValue([
+      { id: '10', name: 'Week 1', items: [{ id: '105', title: 'Mystery', type: 'Assignment', locked: false }] },
+    ]);
+    const client = { get: vi.fn() };
+    const result = await getModuleItem(client as any, '7', '105');
+    expect(result.plainText).toContain('get_assignments');
+    expect(client.get).not.toHaveBeenCalled();
+  });
+
+  it('builds the File ref directly with the canonical api endpoint', async () => {
+    (getModules as any).mockResolvedValue([
+      { id: '10', name: 'Week 1', items: [{ id: '101', title: 'Slides', type: 'File', fileId: '555', locked: false }] },
+    ]);
+    const client = { get: vi.fn().mockResolvedValue({ display_name: 'Slides.pdf', url: 'https://canvas/files/555/download' }) };
+    const result = await getModuleItem(client as any, '7', '101');
+    expect(result.files[0]).toEqual({ name: 'Slides.pdf', fileId: '555', apiEndpoint: '/api/v1/courses/7/files/555' });
+  });
 });

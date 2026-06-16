@@ -10,20 +10,19 @@ export async function getModules(
     `/api/v1/courses/${courseId}/modules`
   );
 
-  const result: ModuleSummary[] = [];
-
-  for (const mod of modules) {
-    const items = await client.getPaginated<CanvasModuleItem>(
-      `/api/v1/courses/${courseId}/modules/${mod.id}/items`
-    );
-    result.push({
-      id: String(mod.id),
-      name: mod.name,
-      items: items.map(mapModuleItem),
-    });
-  }
-
-  return result;
+  // Item fetches are independent — run them concurrently rather than serially.
+  return Promise.all(
+    modules.map(async (mod) => {
+      const items = await client.getPaginated<CanvasModuleItem>(
+        `/api/v1/courses/${courseId}/modules/${mod.id}/items`
+      );
+      return {
+        id: String(mod.id),
+        name: mod.name,
+        items: items.map(mapModuleItem),
+      };
+    })
+  );
 }
 
 function mapModuleItem(item: CanvasModuleItem): ModuleItemSummary {

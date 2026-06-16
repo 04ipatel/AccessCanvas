@@ -11,6 +11,10 @@ describe('sanitizeName', () => {
   it('keeps dots, hyphens, underscores', () => {
     expect(sanitizeName('case_study-2.v1.pdf')).toBe('case_study-2.v1.pdf');
   });
+  it('falls back to "file" when the name sanitizes to empty', () => {
+    expect(sanitizeName('（無題）')).toBe('file');
+    expect(sanitizeName('!!!###')).toBe('file');
+  });
 });
 
 describe('downloadFile', () => {

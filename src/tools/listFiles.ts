@@ -1,3 +1,4 @@
+import { CanvasApiError } from '../lib/canvasClient.js';
 import type { CanvasClient } from '../lib/canvasClient.js';
 import type { CanvasFile, FileSummary } from '../types.js';
 
@@ -10,7 +11,8 @@ export async function listFiles(
     files = await client.getPaginated<CanvasFile>(`/api/v1/courses/${courseId}/files`);
   } catch (err) {
     // A professor can disable file export → Canvas responds 403. Absence is information, not an error.
-    if (err instanceof Error && /\b40[13]\b/.test(err.message)) return [];
+    // Only 403 is absorbed — 401 (bad/expired token) and everything else must propagate.
+    if (err instanceof CanvasApiError && err.status === 403) return [];
     throw err;
   }
 

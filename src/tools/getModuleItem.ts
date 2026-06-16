@@ -29,7 +29,13 @@ export async function getModuleItem(
       `Module item ${moduleItemId} not found in course ${courseId}. Call get_modules to list valid item IDs.`);
   }
 
-  if (found.type === 'Assignment' && found.assignmentId) {
+  // Locked items (unmet prerequisites) return 403 from Canvas — surface a message instead of throwing.
+  if (found.locked) {
+    return empty(moduleItemId, found.title,
+      `This item is locked (prerequisites not met). Complete the required steps in Canvas to unlock it.`);
+  }
+
+  if (found.type === 'Assignment') {
     return empty(moduleItemId, found.title,
       `This is an assignment. Use get_assignments with courseId: ${courseId} to see its full description, files, and due date.`);
   }
@@ -41,30 +47,27 @@ export async function getModuleItem(
     return empty(moduleItemId, found.title,
       `This is an external link: ${found.externalUrl ?? '(none)'}${found.password ? ` (password: ${found.password})` : ''}`);
   }
-  if (found.type === 'SubHeader' || found.type === 'ExternalTool' || found.type === 'Quiz') {
-    return empty(moduleItemId, found.title,
-      `This item (type: ${found.type}) cannot be fetched directly. Access it through Canvas.`);
-  }
-
-  let title: string;
-  let html: string;
 
   if (found.type === 'File' && found.fileId) {
     const file = await client.get<CanvasFile>(`/api/v1/courses/${courseId}/files/${found.fileId}`);
-    title = file.display_name;
-    const apiEndpoint = `/api/v1/courses/${courseId}/files/${found.fileId}`;
-    html = `<a href="${file.url}" data-api-endpoint="${apiEndpoint}">${file.display_name}</a>`;
-  } else if (found.pageUrl) {
-    const page = await client.get<CanvasPage>(`/api/v1/courses/${courseId}/pages/${found.pageUrl}`);
-    title = page.title;
-    html = page.body;
-  } else {
-    return empty(moduleItemId, found.title,
-      `Could not determine how to fetch this module item (type: ${found.type}).`);
+    // Structured response — no need to round-trip through parseContent.
+    return {
+      id: moduleItemId,
+      title: file.display_name,
+      plainText: file.display_name,
+      files: [{ name: file.display_name, fileId: found.fileId, apiEndpoint: `/api/v1/courses/${courseId}/files/${found.fileId}` }],
+      externalLinks: [],
+    };
   }
 
-  const parsed = parseContent(html);
-  return { id: moduleItemId, title, plainText: parsed.plainText, files: parsed.files, externalLinks: parsed.externalLinks };
+  if (found.pageUrl) {
+    const page = await client.get<CanvasPage>(`/api/v1/courses/${courseId}/pages/${found.pageUrl}`);
+    const parsed = parseContent(page.body ?? '');
+    return { id: moduleItemId, title: page.title, plainText: parsed.plainText, files: parsed.files, externalLinks: parsed.externalLinks };
+  }
+
+  return empty(moduleItemId, found.title,
+    `This item (type: ${found.type}) cannot be fetched directly. Access it through Canvas.`);
 }
 
 function empty(id: string, title: string, plainText: string): ModuleItemContent {
