@@ -70,7 +70,7 @@ export interface CanvasPage {
   page_id: number;
   url: string;
   title: string;
-  body: string;
+  body: string | null; // Canvas returns null for body-less pages
 }
 
 export interface CanvasDiscussionTopic {

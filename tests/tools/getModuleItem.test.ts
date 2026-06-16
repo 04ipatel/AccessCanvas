@@ -30,7 +30,7 @@ describe('getModuleItem', () => {
     };
     const result = await getModuleItem(client as any, '7', '101');
     expect(result.title).toBe('Slides.pdf');
-    expect(result.files[0]).toMatchObject({ name: 'Slides.pdf' });
+    expect(result.files[0]).toEqual({ name: 'Slides.pdf', fileId: '555', apiEndpoint: '/api/v1/courses/7/files/555' });
     expect(client.get).toHaveBeenCalledWith('/api/v1/courses/7/files/555');
   });
 
@@ -81,14 +81,5 @@ describe('getModuleItem', () => {
     const result = await getModuleItem(client as any, '7', '105');
     expect(result.plainText).toContain('get_assignments');
     expect(client.get).not.toHaveBeenCalled();
-  });
-
-  it('builds the File ref directly with the canonical api endpoint', async () => {
-    (getModules as any).mockResolvedValue([
-      { id: '10', name: 'Week 1', items: [{ id: '101', title: 'Slides', type: 'File', fileId: '555', locked: false }] },
-    ]);
-    const client = { get: vi.fn().mockResolvedValue({ display_name: 'Slides.pdf', url: 'https://canvas/files/555/download' }) };
-    const result = await getModuleItem(client as any, '7', '101');
-    expect(result.files[0]).toEqual({ name: 'Slides.pdf', fileId: '555', apiEndpoint: '/api/v1/courses/7/files/555' });
   });
 });
