@@ -1,6 +1,6 @@
 import type { CanvasClient } from '../lib/canvasClient.js';
-import type { Cache } from '../lib/cache.js';
 import { parseContent } from '../lib/htmlParser.js';
+import { getModules } from './getModules.js';
 import type { CanvasFile, CanvasPage, ParsedContent } from '../types.js';
 
 export interface ModuleItemContent {
@@ -9,131 +9,64 @@ export interface ModuleItemContent {
   plainText: string;
   files: ParsedContent['files'];
   externalLinks: ParsedContent['externalLinks'];
-  fromCache: boolean;
-  fetchedAt: string;
 }
 
 export async function getModuleItem(
   client: CanvasClient,
-  cache: Cache,
   courseId: string,
-  moduleItemId: string,
-  forceRefresh: boolean = false
+  moduleItemId: string
 ): Promise<ModuleItemContent> {
-  if (!forceRefresh) {
-    const cached = cache.getPage(moduleItemId);
-    if (cached) {
-      const parsed = parseContent(cached.content);
-      return {
-        id: moduleItemId,
-        title: cached.title,
-        plainText: parsed.plainText,
-        files: parsed.files,
-        externalLinks: parsed.externalLinks,
-        fromCache: true,
-        fetchedAt: cached.fetchedAt,
-      };
-    }
+  const modules = await getModules(client, courseId);
+
+  let found;
+  for (const mod of modules) {
+    found = mod.items.find((i) => i.id === moduleItemId);
+    if (found) break;
   }
 
-  // Look up item type from cached module structure
-  const modules = cache.getModuleStructure(courseId);
-  let itemType: string | undefined;
-  let pageUrl: string | undefined;
-  let fileId: string | undefined;
-  let assignmentId: string | undefined;
-  let discussionId: string | undefined;
-  let itemTitle: string | undefined;
-
-  if (modules) {
-    for (const mod of modules.data) {
-      const found = mod.items.find((i) => i.id === moduleItemId);
-      if (found) {
-        itemType = found.type;
-        pageUrl = found.pageUrl;
-        fileId = found.fileId;
-        assignmentId = found.assignmentId;
-        discussionId = found.discussionId;
-        itemTitle = found.title;
-        break;
-      }
-    }
+  if (!found) {
+    return empty(moduleItemId, 'Unknown item',
+      `Module item ${moduleItemId} not found in course ${courseId}. Call get_modules to list valid item IDs.`);
   }
 
-  const fetchedAt = new Date().toISOString();
-
-  // Graceful handling for types that have dedicated tools
-  if (itemType === 'Assignment' && assignmentId) {
-    return {
-      id: moduleItemId,
-      title: itemTitle ?? 'Assignment',
-      plainText: `This is an assignment. Use get_assignment_details with courseId: ${courseId} and assignmentId: ${assignmentId} to view the full description, files, and due date.`,
-      files: [],
-      externalLinks: [],
-      fromCache: false,
-      fetchedAt,
-    };
+  if (found.type === 'Assignment' && found.assignmentId) {
+    return empty(moduleItemId, found.title,
+      `This is an assignment. Use get_assignments with courseId: ${courseId} to see its full description, files, and due date.`);
   }
-
-  if (itemType === 'Discussion' && discussionId) {
-    return {
-      id: moduleItemId,
-      title: itemTitle ?? 'Discussion',
-      plainText: `This is a discussion. Use get_announcements with courseId: ${courseId} to view course announcements, or access this discussion directly on Canvas.`,
-      files: [],
-      externalLinks: [],
-      fromCache: false,
-      fetchedAt,
-    };
+  if (found.type === 'Discussion') {
+    return empty(moduleItemId, found.title,
+      `This is a discussion. Use get_announcements with courseId: ${courseId}, or open it directly on Canvas.`);
   }
-
-  if (itemType === 'SubHeader' || itemType === 'ExternalTool' || itemType === 'Quiz') {
-    return {
-      id: moduleItemId,
-      title: itemTitle ?? itemType ?? 'Module item',
-      plainText: `This item (type: ${itemType}) cannot be fetched directly. Access it through Canvas.`,
-      files: [],
-      externalLinks: [],
-      fromCache: false,
-      fetchedAt,
-    };
+  if (found.type === 'ExternalUrl') {
+    return empty(moduleItemId, found.title,
+      `This is an external link: ${found.externalUrl ?? '(none)'}${found.password ? ` (password: ${found.password})` : ''}`);
+  }
+  if (found.type === 'SubHeader' || found.type === 'ExternalTool' || found.type === 'Quiz') {
+    return empty(moduleItemId, found.title,
+      `This item (type: ${found.type}) cannot be fetched directly. Access it through Canvas.`);
   }
 
   let title: string;
   let html: string;
 
-  if (itemType === 'File' && fileId) {
-    const file = await client.get<CanvasFile>(`/api/v1/courses/${courseId}/files/${fileId}`);
+  if (found.type === 'File' && found.fileId) {
+    const file = await client.get<CanvasFile>(`/api/v1/courses/${courseId}/files/${found.fileId}`);
     title = file.display_name;
-    html = `<a href="${file.url}" data-api-endpoint="${file.url}">${file.display_name}</a>`;
-  } else if (pageUrl) {
-    const page = await client.get<CanvasPage>(`/api/v1/courses/${courseId}/pages/${pageUrl}`);
+    const apiEndpoint = `/api/v1/courses/${courseId}/files/${found.fileId}`;
+    html = `<a href="${file.url}" data-api-endpoint="${apiEndpoint}">${file.display_name}</a>`;
+  } else if (found.pageUrl) {
+    const page = await client.get<CanvasPage>(`/api/v1/courses/${courseId}/pages/${found.pageUrl}`);
     title = page.title;
     html = page.body;
   } else {
-    return {
-      id: moduleItemId,
-      title: itemTitle ?? 'Unknown item',
-      plainText: modules
-        ? `Could not determine how to fetch this module item (type: ${itemType ?? 'unknown'}). It may be a type not supported for direct content fetching.`
-        : `Module structure not in cache. Call get_course_modules for courseId: ${courseId} first, then retry.`,
-      files: [],
-      externalLinks: [],
-      fromCache: false,
-      fetchedAt,
-    };
+    return empty(moduleItemId, found.title,
+      `Could not determine how to fetch this module item (type: ${found.type}).`);
   }
 
-  cache.setPage(moduleItemId, courseId, title, html);
   const parsed = parseContent(html);
+  return { id: moduleItemId, title, plainText: parsed.plainText, files: parsed.files, externalLinks: parsed.externalLinks };
+}
 
-  return {
-    id: moduleItemId,
-    title,
-    plainText: parsed.plainText,
-    files: parsed.files,
-    externalLinks: parsed.externalLinks,
-    fromCache: false,
-    fetchedAt,
-  };
+function empty(id: string, title: string, plainText: string): ModuleItemContent {
+  return { id, title, plainText, files: [], externalLinks: [] };
 }
