@@ -24,6 +24,11 @@ Config lives at `~/.accesscanvas/config.json` (requires `token`, `baseUrl`, `dow
 
 **Scope boundary (important):** AccessCanvas is *only* the Canvas-access layer. The higher-level intelligence — maintaining a per-course knowledge base (a Karpathy-style "truth + append-only log" course brain), reconciling sources, reading PDFs, pulling lecture transcripts (Granola), scheduling study — lives **downstream**, in Claude Desktop automations and scheduled tasks that consume these primitives. None of that is built in this repo. AccessCanvas's job is to be a reliable, boring data tap.
 
+**Read these before non-trivial work** (they carry the load-bearing design intent this file can't fully hold):
+- `docs/reference/architecture.md` — the whole system design and exactly where AccessCanvas (Tier 1) sits relative to the downstream course-brain intelligence (Tier 2).
+- `docs/reference/decisions.md` — numbered architectural decisions (D1–D3) with rationale and rejected alternatives.
+- `docs/reference/someday.md` — known limitations and deferred ideas.
+
 ## Architecture
 
 ```

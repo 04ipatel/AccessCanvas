@@ -5,6 +5,16 @@ Reach out if you have questions or want new features.
 
 ---
 
+## The bigger picture (what this is really for)
+
+Canvas alone isn't the full story of your classes — professors announce deadlines out loud, the real schedule often lives in a syllabus PDF, and some professors turn off Canvas features. So this tool doesn't try to be smart about your courses. It does **one job well: it's the clean, reliable connection to Canvas.** Think of it as a tap that gives Claude exactly the Canvas data it asks for — your courses, assignments, grades, files — fresh every time, nothing cached, no guessing.
+
+The *smart* part happens in Claude, on top of this tool: keeping a running "brain" for each class (a trusted summary at the top, a running log of new things at the bottom), reconciling what a professor said in lecture against what's on Canvas, reading PDFs, and eventually helping you study on a schedule instead of cramming. That intelligence lives in your Claude automations — **not in this tool.** AccessCanvas just feeds it reliable Canvas data.
+
+In short: this is the foundation — a boring, dependable data layer — that makes the clever, grade-helping stuff possible and trustworthy. Full design notes live in [`docs/reference/architecture.md`](docs/reference/architecture.md).
+
+---
+
 ## What you need before starting
 
 - A Mac or Windows computer
