@@ -3,6 +3,7 @@ export interface CanvasCourse {
   id: number;
   name: string;
   course_code: string;
+  term?: { name: string } | null;
   enrollments?: Array<{
     type: string;
     computed_current_score: number | null;
@@ -69,7 +70,7 @@ export interface CanvasPage {
   page_id: number;
   url: string;
   title: string;
-  body: string;
+  body: string | null; // Canvas returns null for body-less pages
 }
 
 export interface CanvasDiscussionTopic {
@@ -80,6 +81,14 @@ export interface CanvasDiscussionTopic {
 }
 
 // MCP tool output shapes (trimmed — only what Claude needs)
+export interface FileSummary {
+  id: string;
+  name: string;
+  url: string;
+  type: string;
+  size: number;
+}
+
 export interface FileRef {
   name: string;
   fileId: string | null;

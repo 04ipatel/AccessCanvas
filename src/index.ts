@@ -4,70 +4,56 @@ import { z } from 'zod';
 
 import { loadConfig } from './lib/config.js';
 import { CanvasClient } from './lib/canvasClient.js';
-import { openCache } from './lib/cache.js';
 
-import { getCourses } from './tools/getCourses.js';
-import { getUpcomingAssignments } from './tools/getUpcomingAssignments.js';
+import { listCourses } from './tools/listCourses.js';
+import { getAssignments } from './tools/getAssignments.js';
 import { getGrades } from './tools/getGrades.js';
-import { getAnnouncements } from './tools/getAnnouncements.js';
-import { getAssignmentDetails } from './tools/getAssignmentDetails.js';
-import { getCourseModules } from './tools/getCourseModules.js';
-import { getModuleItem } from './tools/getModuleItem.js';
 import { getAssignmentGrades } from './tools/getAssignmentGrades.js';
-import { downloadFiles } from './tools/downloadFiles.js';
+import { getAnnouncements } from './tools/getAnnouncements.js';
+import { getModules } from './tools/getModules.js';
+import { getModuleItem } from './tools/getModuleItem.js';
+import { listFiles } from './tools/listFiles.js';
+import { downloadFile } from './tools/downloadFile.js';
 
-function withMeta(data: unknown, opts: { fromCache?: boolean; fetchedAt?: string } = {}) {
-  const fetchedAt = opts.fetchedAt ?? new Date().toISOString();
-  const meta: Record<string, unknown> = { _fetchedAt: fetchedAt };
-  if (opts.fromCache) {
-    meta._fromCache = true;
-    meta._hint = 'Served from cache — pass forceRefresh: true to fetch latest from Canvas.';
-  }
-  return { data, ...meta };
+function withMeta(data: unknown) {
+  return { data, _fetchedAt: new Date().toISOString() };
+}
+
+function ok(data: unknown) {
+  return { content: [{ type: 'text' as const, text: JSON.stringify(withMeta(data), null, 2) }] };
 }
 
 const config = loadConfig();
 const client = new CanvasClient(config);
-const cache = openCache();
 
-const server = new McpServer({
-  name: 'accesscanvas',
-  version: '1.0.0',
-});
+const server = new McpServer({ name: 'accesscanvas', version: '0.1.0' });
 
 server.tool(
-  'get_courses',
-  'List all active enrolled courses at Babson',
+  'list_courses',
+  'List active enrolled courses (id, name, code, term).',
   {},
-  async () => {
-    const courses = await getCourses(client);
-    return { content: [{ type: 'text', text: JSON.stringify(withMeta(courses), null, 2) }] };
-  }
+  async () => ok(await listCourses(client))
 );
 
 server.tool(
-  'get_upcoming_assignments',
-  'List upcoming assignments due within N days. If courseId is omitted, returns assignments across all courses.',
-  {
-    courseId: z.string().optional().describe('Canvas course ID. Omit to get all courses.'),
-  },
-  async ({ courseId }) => {
-    const allCourses = courseId ? undefined : await getCourses(client);
-    const assignments = await getUpcomingAssignments(client, { courseId }, allCourses, config.timezone);
-    return { content: [{ type: 'text', text: JSON.stringify(withMeta(assignments), null, 2) }] };
-  }
+  'get_assignments',
+  'List all assignments for a course with full detail: due date, points, parsed description, embedded files, and external links. Filter by date yourself — this returns the full set.',
+  { courseId: z.string().describe('Canvas course ID') },
+  async ({ courseId }) => ok(await getAssignments(client, courseId, config.timezone))
 );
 
 server.tool(
   'get_grades',
-  'Get current grades for all courses or a specific course.',
-  {
-    courseId: z.string().optional().describe('Canvas course ID. Omit to get grades for all courses.'),
-  },
-  async ({ courseId }) => {
-    const grades = await getGrades(client, courseId);
-    return { content: [{ type: 'text', text: JSON.stringify(withMeta(grades), null, 2) }] };
-  }
+  'Get current course-level grades. Omit courseId for all courses.',
+  { courseId: z.string().optional().describe('Canvas course ID; omit for all courses') },
+  async ({ courseId }) => ok(await getGrades(client, courseId))
+);
+
+server.tool(
+  'get_assignment_grades',
+  'Get per-assignment scores for a course: score, points possible, grade, and missing/late flags.',
+  { courseId: z.string().describe('Canvas course ID') },
+  async ({ courseId }) => ok(await getAssignmentGrades(client, courseId, config.timezone))
 );
 
 server.tool(
@@ -75,82 +61,44 @@ server.tool(
   'Get recent announcements for a course.',
   {
     courseId: z.string().describe('Canvas course ID'),
-    limit: z.number().optional().describe('Number of announcements to return. Default: 5.'),
+    limit: z.number().optional().describe('Max announcements to return (default 5)'),
   },
-  async ({ courseId, limit }) => {
-    const announcements = await getAnnouncements(client, courseId, limit);
-    return { content: [{ type: 'text', text: JSON.stringify(withMeta(announcements), null, 2) }] };
-  }
+  async ({ courseId, limit }) => ok(await getAnnouncements(client, courseId, limit))
 );
 
 server.tool(
-  'get_assignment_details',
-  'Get full details for a specific assignment, including any downloadable files embedded in the description.',
-  {
-    courseId: z.string().describe('Canvas course ID'),
-    assignmentId: z.string().describe('Canvas assignment ID'),
-  },
-  async ({ courseId, assignmentId }) => {
-    const details = await getAssignmentDetails(client, courseId, assignmentId, config.timezone);
-    return { content: [{ type: 'text', text: JSON.stringify(withMeta(details), null, 2) }] };
-  }
-);
-
-server.tool(
-  'get_assignment_grades',
-  'Get individual assignment scores for a course. Shows score, grade, points possible, and flags for missing/late work. Use this to break down a course grade.',
-  {
-    courseId: z.string().describe('Canvas course ID'),
-  },
-  async ({ courseId }) => {
-    const grades = await getAssignmentGrades(client, courseId, config.timezone);
-    return { content: [{ type: 'text', text: JSON.stringify(withMeta(grades), null, 2) }] };
-  }
-);
-
-server.tool(
-  'get_course_modules',
-  'Get the full module structure for a course. Cached after first fetch. Use forceRefresh to re-sync.',
-  {
-    courseId: z.string().describe('Canvas course ID'),
-    forceRefresh: z.boolean().optional().describe('Re-fetch from Canvas even if cached. Default: false.'),
-  },
-  async ({ courseId, forceRefresh }) => {
-    const { modules, fromCache, fetchedAt } = await getCourseModules(client, cache, courseId, forceRefresh);
-    return { content: [{ type: 'text', text: JSON.stringify(withMeta(modules, { fromCache, fetchedAt }), null, 2) }] };
-  }
+  'get_modules',
+  'Get the full module structure for a course: modules and their items (pages, files, assignments, links).',
+  { courseId: z.string().describe('Canvas course ID') },
+  async ({ courseId }) => ok(await getModules(client, courseId))
 );
 
 server.tool(
   'get_module_item',
-  'Get the content of a specific module item (a page or file). Returns plain text body and any embedded files. Call get_course_modules first to discover item IDs.',
+  'Get the content of one module item (page or file): plain text plus any embedded files. Get item IDs from get_modules.',
   {
     courseId: z.string().describe('Canvas course ID'),
-    moduleItemId: z.string().describe('Module item ID from get_course_modules'),
-    forceRefresh: z.boolean().optional().describe('Re-fetch even if cached. Default: false.'),
+    moduleItemId: z.string().describe('Module item ID from get_modules'),
   },
-  async ({ courseId, moduleItemId, forceRefresh }) => {
-    const { fromCache, fetchedAt, ...content } = await getModuleItem(client, cache, courseId, moduleItemId, forceRefresh);
-    return { content: [{ type: 'text', text: JSON.stringify(withMeta(content, { fromCache, fetchedAt }), null, 2) }] };
-  }
+  async ({ courseId, moduleItemId }) => ok(await getModuleItem(client, courseId, moduleItemId))
 );
 
 server.tool(
-  'download_files',
-  'Download Canvas files to the configured download directory. Get fileIds from get_assignment_details or get_module_item.',
+  'list_files',
+  'List files Canvas exposes for a course. Returns an empty list if the professor disabled file export.',
+  { courseId: z.string().describe('Canvas course ID') },
+  async ({ courseId }) => ok(await listFiles(client, courseId))
+);
+
+server.tool(
+  'download_file',
+  'Download one Canvas file to local disk. `dest` (optional): a directory — absolute, or relative to the configured downloadDir. Filename comes from Canvas. Returns the written path. Get fileId from get_assignments, get_module_item, or list_files.',
   {
-    files: z.array(z.object({
-      fileId: z.string().describe('Canvas file ID'),
-      courseId: z.string().describe('Canvas course ID'),
-      courseCode: z.string().describe('Course code, e.g. "CS101", used for folder naming'),
-      courseName: z.string().describe('Human-readable course name for folder organization'),
-      context: z.string().describe('Folder context, e.g. "Assignment2" or "Syllabus"'),
-    })).describe('Files to download'),
+    courseId: z.string().describe('Canvas course ID'),
+    fileId: z.string().describe('Canvas file ID'),
+    dest: z.string().optional().describe('Target directory (absolute, or relative to downloadDir). Omit for flat downloadDir.'),
   },
-  async ({ files }) => {
-    const results = await downloadFiles(client, cache, files, config.downloadDir);
-    return { content: [{ type: 'text', text: JSON.stringify(withMeta(results), null, 2) }] };
-  }
+  async ({ courseId, fileId, dest }) => ok(await downloadFile(client, { courseId, fileId, dest }, config.downloadDir))
 );
 
 const transport = new StdioServerTransport();

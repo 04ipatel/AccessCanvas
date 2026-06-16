@@ -1,8 +1,7 @@
 {
-  "_note_better_sqlite3": "Version bumped from ^9.0.0 to ^12.8.0 for Node 25 compatibility (v9 fails to compile against Node 25 V8 headers)",
   "name": "accesscanvas",
-  "version": "1.0.0",
-  "description": "MCP server for Babson Canvas LMS",
+  "version": "0.1.0",
+  "description": "Lean, stateless MCP server for Babson Canvas LMS",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
@@ -17,13 +16,11 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.28.0",
-    "better-sqlite3": "^12.8.0",
     "node-html-parser": "^6.1.13",
     "zod": "^3.25.76"
   },
   "devDependencies": {
     "@inquirer/prompts": "^8.3.2",
-    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20.19.37",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",

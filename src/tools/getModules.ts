@@ -1,46 +1,28 @@
 import type { CanvasClient } from '../lib/canvasClient.js';
-import type { Cache } from '../lib/cache.js';
 import { extractPasswordFromTitle } from '../lib/htmlParser.js';
 import type { CanvasModule, CanvasModuleItem, ModuleSummary, ModuleItemSummary } from '../types.js';
 
-export interface CourseModulesResult {
-  modules: ModuleSummary[];
-  fromCache: boolean;
-  fetchedAt: string;
-}
-
-export async function getCourseModules(
+export async function getModules(
   client: CanvasClient,
-  cache: Cache,
-  courseId: string,
-  forceRefresh: boolean = false
-): Promise<CourseModulesResult> {
-  if (!forceRefresh) {
-    const cached = cache.getModuleStructure(courseId);
-    if (cached) return { modules: cached.data, fromCache: true, fetchedAt: cached.fetchedAt };
-  }
-
+  courseId: string
+): Promise<ModuleSummary[]> {
   const modules = await client.getPaginated<CanvasModule>(
     `/api/v1/courses/${courseId}/modules`
   );
 
-  const result: ModuleSummary[] = [];
-
-  for (const mod of modules) {
-    const items = await client.getPaginated<CanvasModuleItem>(
-      `/api/v1/courses/${courseId}/modules/${mod.id}/items`
-    );
-
-    const mappedItems: ModuleItemSummary[] = items.map((item) =>
-      mapModuleItem(item)
-    );
-
-    result.push({ id: String(mod.id), name: mod.name, items: mappedItems });
-  }
-
-  const fetchedAt = new Date().toISOString();
-  cache.setModuleStructure(courseId, result);
-  return { modules: result, fromCache: false, fetchedAt };
+  // Item fetches are independent — run them concurrently rather than serially.
+  return Promise.all(
+    modules.map(async (mod) => {
+      const items = await client.getPaginated<CanvasModuleItem>(
+        `/api/v1/courses/${courseId}/modules/${mod.id}/items`
+      );
+      return {
+        id: String(mod.id),
+        name: mod.name,
+        items: items.map(mapModuleItem),
+      };
+    })
+  );
 }
 
 function mapModuleItem(item: CanvasModuleItem): ModuleItemSummary {
@@ -61,12 +43,7 @@ function mapModuleItem(item: CanvasModuleItem): ModuleItemSummary {
     case 'ExternalUrl': {
       const password = extractPasswordFromTitle(item.title);
       const cleanTitle = item.title.replace(/\s*\(password:[^)]+\)/i, '').trim();
-      return {
-        ...base,
-        title: cleanTitle,
-        externalUrl: item.external_url ?? undefined,
-        password,
-      };
+      return { ...base, title: cleanTitle, externalUrl: item.external_url ?? undefined, password };
     }
     case 'Discussion':
       return { ...base, discussionId: item.content_id ? String(item.content_id) : undefined };

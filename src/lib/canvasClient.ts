@@ -1,5 +1,14 @@
 import type { Config } from '../types.js';
 
+/** Error thrown on a non-2xx Canvas response. Carries the HTTP status as a
+ * structured field so callers branch on `err.status` instead of parsing the message. */
+export class CanvasApiError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+    this.name = 'CanvasApiError';
+  }
+}
+
 export class CanvasClient {
   private token: string;
   private baseUrl: string;
@@ -22,7 +31,8 @@ export class CanvasClient {
     });
 
     if (!res.ok) {
-      throw new Error(
+      throw new CanvasApiError(
+        res.status,
         `Canvas API error ${res.status} ${res.statusText} — ${url.toString()}`
       );
     }
@@ -44,7 +54,7 @@ export class CanvasClient {
       });
 
       if (!res.ok) {
-        throw new Error(`Canvas API error ${res.status} ${res.statusText} — ${nextUrl}`);
+        throw new CanvasApiError(res.status, `Canvas API error ${res.status} ${res.statusText} — ${nextUrl}`);
       }
 
       const page = (await res.json()) as T[];
@@ -63,7 +73,7 @@ export class CanvasClient {
     });
 
     if (!res.ok) {
-      throw new Error(`File download error ${res.status} — ${downloadUrl}`);
+      throw new CanvasApiError(res.status, `File download error ${res.status} — ${downloadUrl}`);
     }
 
     const ab = await res.arrayBuffer();
