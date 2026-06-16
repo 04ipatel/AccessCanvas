@@ -109,14 +109,15 @@ Try asking Claude:
 
 | Tool | What it does |
 |------|-------------|
-| `get_courses` | Lists your active courses |
-| `get_upcoming_assignments` | Assignments due soon |
-| `get_assignment_grades` | Scores and submission status for a course |
-| `get_assignment_details` | Full description and attached files for an assignment |
+| `list_courses` | Lists your active courses |
+| `get_assignments` | Every assignment for a course — due dates, points, instructions, attached files |
+| `get_grades` | Your overall grade in each course |
+| `get_assignment_grades` | Scores and submission status, assignment by assignment |
 | `get_announcements` | Recent announcements for a course |
-| `get_course_modules` | Module/week structure for a course |
+| `get_modules` | Module/week structure for a course |
 | `get_module_item` | Content of a specific module page |
-| `download_files` | Downloads files to your computer |
+| `list_files` | Files a course makes available |
+| `download_file` | Downloads a file to your computer |
 
 ---
 
