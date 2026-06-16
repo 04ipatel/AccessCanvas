@@ -36,7 +36,7 @@ This pattern is documented here so the primitive surface is shaped to serve it. 
 ## Goals
 
 - A thin, read-only, **stateless** Canvas-access MCP server.
-- Eight clean primitives with uniform, predictable response shapes.
+- Nine clean primitives with uniform, predictable response shapes.
 - Reuse the genuinely conducive v1 building blocks (Canvas REST client, HTML parser, date formatting, config, file download).
 - Delete everything that doesn't serve the new scope (cache, tool-split, response-wrapping metadata).
 - Fully testable core (vitest, mocked Canvas responses), TDD for client + parsers.
@@ -90,7 +90,7 @@ scripts/setup.ts  — setup wizard                                              
 - **`index.ts`** — register the 8 primitives; one thin uniform wrapper (structured data + `_fetchedAt` only).
 - **`src/tools/*`** — rewritten as thin, stateless functions over `canvasClient` (+ `htmlParser`, `dateUtils`, `fileManager` where relevant). No cache argument anywhere.
 
-## The Primitive Surface (8 tools)
+## The Primitive Surface (9 tools)
 
 All are read-only except `downloadFile` (writes to local disk only). All are stateless. Param names use `courseId` to match Canvas IDs.
 
@@ -160,10 +160,10 @@ Unchanged from v1. `~/.accesscanvas/config.json`:
 ## Net Effect
 
 - Roughly half the v1 code deleted (cache, tool-split, metadata machinery).
-- Surface: "9 tools + cache machinery" → "8 clean stateless primitives."
+- Surface: "9 tools + cache machinery" → "9 clean stateless primitives."
 - AccessCanvas becomes a reliable, boring Canvas data tap; the karpathy-wiki and all optimization live downstream in Claude automations that consume it.
 
-## Open Decisions (resolve in the plan)
+## Resolved Decisions
 
-- **Versioning:** v1 is at `1.0.0`. This is a breaking rewrite of the MCP surface. Decide: bump to `2.0.0`, or restart `0.x` per the new-project convention. (Leaning `2.0.0` — same project, breaking change.)
-- **`getGrades` vs `getAssignmentGrades`:** confirm whether both are needed, or whether course-level grade should be a field on `listCourses` to drop one primitive.
+- **Versioning:** restart at `0.1.0` per the new-project convention. This rebuild is treated as a fresh project, not a continuation of v1's `1.0.0`.
+- **`getGrades` + `getAssignmentGrades`:** keep both. Course-level summary and per-assignment breakdown serve different downstream consumers; the per-assignment breakdown is what a grade-optimization agent needs.
