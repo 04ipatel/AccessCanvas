@@ -1,5 +1,5 @@
 import { writeFileSync, mkdirSync } from 'fs';
-import { join, dirname } from 'path';
+import { join, dirname, isAbsolute } from 'path';
 import type { CanvasClient } from './canvasClient.js';
 import type { CanvasFile } from '../types.js';
 
@@ -7,33 +7,43 @@ export function sanitizeName(name: string): string {
   return name.replace(/\s+/g, '').replace(/[^a-zA-Z0-9._\-]/g, '');
 }
 
-export function getLocalPath(
-  courseCode: string,
-  courseName: string,
-  context: string,
-  filename: string,
-  downloadDir: string
-): string {
-  const folderName = `${courseCode}-${sanitizeName(courseName)}`;
-  return join(downloadDir, folderName, sanitizeName(context), sanitizeName(filename));
+export interface DownloadFileRequest {
+  courseId: string;
+  fileId: string;
+  dest?: string;
 }
 
-export async function downloadCanvasFile(
+export interface DownloadFileResult {
+  path: string;
+  displayName: string;
+}
+
+/**
+ * Downloads a Canvas file to local disk. AccessCanvas does NOT impose any folder
+ * layout — the caller decides placement via `dest`:
+ *   - no dest        → write flat into downloadDir
+ *   - relative dest  → join(downloadDir, dest)
+ *   - absolute dest  → use as-is
+ * Filename comes from the Canvas display_name (sanitized).
+ */
+export async function downloadFile(
   client: CanvasClient,
-  courseId: string,
-  fileId: string,
-  courseCode: string,
-  courseName: string,
-  context: string,
+  req: DownloadFileRequest,
   downloadDir: string
-): Promise<{ localPath: string; displayName: string }> {
-  const file = await client.get<CanvasFile>(`/api/v1/courses/${courseId}/files/${fileId}`);
-  const localPath = getLocalPath(courseCode, courseName, context, file.display_name, downloadDir);
+): Promise<DownloadFileResult> {
+  const file = await client.get<CanvasFile>(
+    `/api/v1/courses/${req.courseId}/files/${req.fileId}`
+  );
 
-  mkdirSync(dirname(localPath), { recursive: true });
+  const targetDir = req.dest
+    ? (isAbsolute(req.dest) ? req.dest : join(downloadDir, req.dest))
+    : downloadDir;
 
+  const path = join(targetDir, sanitizeName(file.display_name));
+
+  mkdirSync(dirname(path), { recursive: true });
   const buffer = await client.getFileBuffer(file.url);
-  writeFileSync(localPath, buffer);
+  writeFileSync(path, buffer);
 
-  return { localPath, displayName: file.display_name };
+  return { path, displayName: file.display_name };
 }
